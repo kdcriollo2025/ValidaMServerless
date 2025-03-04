@@ -1,0 +1,19 @@
+{
+  "name": "validamarca-serverless",
+  "version": "1.0.0",
+  "description": "Servicio serverless para validación de marca de tarjetas",
+  "main": "handler.js",
+  "scripts": {
+    "test": "jest",
+    "start": "serverless offline start"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1550.0",
+    "node-fetch": "^3.3.0"  
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "serverless": "^3.38.0",
+    "serverless-offline": "^13.3.3"
+  }
+}

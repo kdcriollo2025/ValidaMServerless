@@ -1,0 +1,35 @@
+service: validamarca-serverless
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  memorySize: 128  
+  timeout: 15 
+  environment:
+    STAGE: ${self:provider.stage}
+    MARCA_API_URL: ${env:MARCA_API_URL, 'http://localhost:8081/api/v1/procesador/tarjetas/validar'}
+
+functions:
+  validarMarca:
+    handler: handler.validarMarca
+    events:
+      - http:
+          path: api/v1/marca/validar  
+          method: post
+          cors:
+            origins: '*'  
+            headers:
+              - Content-Type
+              - Authorization
+              - X-Requested-With
+              - Access-Control-Allow-Origin
+            methods:
+              - POST
+              - OPTIONS  
+
+plugins:
+  - serverless-offline  
