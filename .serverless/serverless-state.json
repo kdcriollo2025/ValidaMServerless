@@ -12,7 +12,8 @@
       "memorySize": 128,
       "timeout": 15,
       "environment": {
-        "STAGE": "dev"
+        "STAGE": "dev",
+        "MARCA_API_URL": "http://localhost:8081/api/v1/procesador/tarjetas/validar"
       },
       "versionFunctions": true,
       "compiledCloudFormationTemplate": {
@@ -179,7 +180,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/validamarca-serverless/dev/1741054107730-2025-03-04T02:08:27.730Z/validamarca-serverless.zip"
+                "S3Key": "serverless/validamarca-serverless/dev/1741128506649-2025-03-04T22:48:26.649Z/validamarca-serverless.zip"
               },
               "Handler": "handler.validarMarca",
               "Runtime": "nodejs20.x",
@@ -188,7 +189,8 @@
               "Timeout": 15,
               "Environment": {
                 "Variables": {
-                  "STAGE": "dev"
+                  "STAGE": "dev",
+                  "MARCA_API_URL": "http://localhost:8081/api/v1/procesador/tarjetas/validar"
                 }
               },
               "Role": {
@@ -202,14 +204,14 @@
               "ValidarMarcaLogGroup"
             ]
           },
-          "ValidarMarcaLambdaVersion81OrlPJcQzUHmFQ6Ws8SW1JJM1lnPqCtY6OFyRzO8": {
+          "ValidarMarcaLambdaVersionSAeYAt7pIOjvzAERQF7DrSUWR36xXBCF1bCukdTTl4": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "ValidarMarcaLambdaFunction"
               },
-              "CodeSha256": "a3YKlbia3z8NncD/NmKIJsjXD4VJ63kDkuKew0w1QCU="
+              "CodeSha256": "YCHRTn8Oyg05H4FfzsBmUshVgtyz9a0cN/o71Q0jGv4="
             }
           },
           "ApiGatewayRestApi": {
@@ -366,7 +368,7 @@
               "ValidarMarcaLambdaPermissionApiGateway"
             ]
           },
-          "ApiGatewayDeployment1741054090144": {
+          "ApiGatewayDeployment1741128488013": {
             "Type": "AWS::ApiGateway::Deployment",
             "Properties": {
               "RestApiId": {
@@ -429,7 +431,7 @@
           "ValidarMarcaLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "ValidarMarcaLambdaVersion81OrlPJcQzUHmFQ6Ws8SW1JJM1lnPqCtY6OFyRzO8"
+              "Ref": "ValidarMarcaLambdaVersionSAeYAt7pIOjvzAERQF7DrSUWR36xXBCF1bCukdTTl4"
             },
             "Export": {
               "Name": "sls-validamarca-serverless-dev-ValidarMarcaLambdaFunctionQualifiedArn"
@@ -585,7 +587,7 @@
         "timeout": 15,
         "runtime": "nodejs20.x",
         "vpc": {},
-        "versionLogicalId": "ValidarMarcaLambdaVersion81OrlPJcQzUHmFQ6Ws8SW1JJM1lnPqCtY6OFyRzO8"
+        "versionLogicalId": "ValidarMarcaLambdaVersionSAeYAt7pIOjvzAERQF7DrSUWR36xXBCF1bCukdTTl4"
       }
     },
     "configValidationMode": "warn",
@@ -605,10 +607,10 @@
     },
     "layers": {},
     "isDashboardMonitoringPreconfigured": false,
-    "artifact": "C:\\Users\\dayan\\Documents\\GitHub\\completo\\ValidaMarcaServerless\\.serverless\\validamarca-serverless.zip"
+    "artifact": "C:\\Users\\dayan\\Documents\\GitHub\\completo\\ValidaMServerless\\.serverless\\validamarca-serverless.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/validamarca-serverless/dev/1741054107730-2025-03-04T02:08:27.730Z",
+    "artifactDirectoryName": "serverless/validamarca-serverless/dev/1741128506649-2025-03-04T22:48:26.649Z",
     "artifact": "validamarca-serverless.zip"
   }
 }
