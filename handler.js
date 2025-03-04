@@ -1,5 +1,7 @@
 "use strict";
 
+const fetch = require("node-fetch");
+
 const MARCA_API_URL = process.env.MARCA_API_URL || "http://localhost:8081/api/v1/procesador/tarjetas/validar";
 
 module.exports.validarMarca = async (event) => {
@@ -7,21 +9,22 @@ module.exports.validarMarca = async (event) => {
     const request = JSON.parse(event.body || '{}');
     console.log("📥 Recibiendo solicitud:", request);
 
-    // campos requerido
-    const marcaRequest = {
-      codigoUnicoTransaccion: request.codigoUnicoTransaccion,
-      numeroTarjeta: request.numeroTarjeta,
-      cvv: request.cvv ? request.cvv.toString() : null,
-      fechaCaducidad: request.fechaExpiracion ? convertirFormatoFecha(request.fechaExpiracion) : null,
-      monto: request.monto
-    };
-
-    if (!marcaRequest.codigoUnicoTransaccion || !marcaRequest.numeroTarjeta || !marcaRequest.cvv || !marcaRequest.fechaCaducidad || !marcaRequest.monto) {
+   
+    if (!request.codigoUnicoTransaccion || !request.numeroTarjeta || !request.cvv || !request.fechaExpiracion || !request.monto) {
       return formatResponse(400, {
         tarjetaValida: false,
         mensaje: "⚠️ Datos insuficientes para la validación"
       });
     }
+
+   
+    const marcaRequest = {
+      codigoUnicoTransaccion: request.codigoUnicoTransaccion,
+      numeroTarjeta: request.numeroTarjeta,
+      cvv: request.cvv.toString(),
+      fechaCaducidad: convertirFormatoFecha(request.fechaExpiracion),
+      monto: request.monto
+    };
 
     console.log("🔍 Enviando solicitud a la MARCA:", {
       codigoUnicoTransaccion: marcaRequest.codigoUnicoTransaccion,
@@ -31,6 +34,7 @@ module.exports.validarMarca = async (event) => {
       monto: marcaRequest.monto
     });
 
+   
     const marcaResponse = await callMarcaAPI(marcaRequest);
 
     return formatResponse(200, {
@@ -49,6 +53,7 @@ module.exports.validarMarca = async (event) => {
   }
 };
 
+
 function convertirFormatoFecha(fechaExpiracion) {
   try {
     const [mes, anio] = fechaExpiracion.split("/");
@@ -62,26 +67,22 @@ function convertirFormatoFecha(fechaExpiracion) {
 
 async function callMarcaAPI(marcaRequest) {
   try {
-    const response = await simulateMarcaAPICall(marcaRequest);
-    return response;
+    const response = await fetch(MARCA_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(marcaRequest)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error en la API de la MARCA: ${response.statusText}`);
+    }
+
+    return await response.json();
   } catch (error) {
     throw new Error(`Error llamando a la API de la MARCA: ${error.message}`);
   }
-}
-
-async function simulateMarcaAPICall(request) {
-  await new Promise(resolve => setTimeout(resolve, 300));
-
-  if (!request.numeroTarjeta || !request.cvv || !request.fechaCaducidad) {
-    throw new Error('Datos de tarjeta incompletos');
-  }
-
-
-  return {
-    esValida: true,
-    mensaje: "✅ La tarjeta es válida",
-    swiftBanco: "PICHECU0001"
-  };
 }
 
 
