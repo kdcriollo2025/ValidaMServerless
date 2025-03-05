@@ -11,7 +11,7 @@ provider:
   timeout: 15 
   environment:
     STAGE: ${self:provider.stage}
-    MARCA_API_URL: ${env:MARCA_API_URL, 'http://marcaTarjeta-alb-1353447202.us-east-2.elb.amazonaws.com/api/v1/procesador/tarjetas/validar'}
+    MARCA_API_URL: ${env:MARCA_API_URL, 'http://transaccion-alb-436928501.us-east-2.elb.amazonaws.com/api/v1/procesador/tarjetas/validar'}
 
 functions:
   validarMarca:
