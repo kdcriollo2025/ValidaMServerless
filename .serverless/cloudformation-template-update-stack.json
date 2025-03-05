@@ -162,7 +162,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/validamarca-serverless/dev/1741133816891-2025-03-05T00:16:56.891Z/validamarca-serverless.zip"
+          "S3Key": "serverless/validamarca-serverless/dev/1741138031408-2025-03-05T01:27:11.408Z/validamarca-serverless.zip"
         },
         "Handler": "handler.validarMarca",
         "Runtime": "nodejs20.x",
@@ -172,7 +172,7 @@
         "Environment": {
           "Variables": {
             "STAGE": "dev",
-            "MARCA_API_URL": "https://0f1f-70-183-141-201.ngrok-free.app/api/v1/procesador/tarjetas/validar"
+            "MARCA_API_URL": "https://190c-70-183-141-201.ngrok-free.app/api/v1/procesador/tarjetas/validar"
           }
         },
         "Role": {
@@ -186,14 +186,14 @@
         "ValidarMarcaLogGroup"
       ]
     },
-    "ValidarMarcaLambdaVersionhXHG2FIlxf01APrEMJv78ecfKMqt3aLpOxYj0AIZMk": {
+    "ValidarMarcaLambdaVersionKnwCKKn5SSI5ADufJLtAP8eLaFRHhtV5RNnmmw": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "ValidarMarcaLambdaFunction"
         },
-        "CodeSha256": "hUqWsXvSH6RvOeKL89OetSfa9p8dovBdd1WQ6T5mWG8="
+        "CodeSha256": "umvdKxaHgOutmcxaQcHbDBlnGmDVsb8qB2jsyg9ANQc="
       }
     },
     "ApiGatewayRestApi": {
@@ -350,7 +350,7 @@
         "ValidarMarcaLambdaPermissionApiGateway"
       ]
     },
-    "ApiGatewayDeployment1741133798026": {
+    "ApiGatewayDeployment1741138015834": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -413,7 +413,7 @@
     "ValidarMarcaLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ValidarMarcaLambdaVersionhXHG2FIlxf01APrEMJv78ecfKMqt3aLpOxYj0AIZMk"
+        "Ref": "ValidarMarcaLambdaVersionKnwCKKn5SSI5ADufJLtAP8eLaFRHhtV5RNnmmw"
       },
       "Export": {
         "Name": "sls-validamarca-serverless-dev-ValidarMarcaLambdaFunctionQualifiedArn"
