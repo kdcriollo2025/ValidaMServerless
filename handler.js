@@ -7,25 +7,32 @@ const MARCA_API_URL = process.env.MARCA_API_URL || "https://0f1f-70-183-141-201.
 module.exports.validarMarca = async (event) => {
   try {
     const request = JSON.parse(event.body || '{}');
-    console.log("📥 Recibiendo solicitud:", request);
+    console.log("📥 Recibiendo solicitud de procesatransaccion:", {
+      ...request,
+      numeroTarjeta: request.numeroTarjeta ? `****${request.numeroTarjeta.slice(-4)}` : null,
+      codigoSeguridad: request.codigoSeguridad ? '***' : null
+    });
 
-    // ⚠️ Transformar los datos correctamente antes de enviarlos
+    // ⚠️ Validación de campos requeridos
+    const camposRequeridos = ['codigoUnicoTransaccion', 'numeroTarjeta', 'codigoSeguridad', 'fechaExpiracion', 'monto'];
+    const camposFaltantes = camposRequeridos.filter(campo => !request[campo]);
+    
+    if (camposFaltantes.length > 0) {
+      console.error("🚨 Error: Campos requeridos faltantes:", camposFaltantes);
+      return formatResponse(400, {
+        tarjetaValida: false,
+        mensaje: `⚠️ Campos requeridos faltantes: ${camposFaltantes.join(', ')}`
+      });
+    }
+
+    // ⚠️ Transformar los datos al formato que espera la marca
     const marcaRequest = {
       codigoUnicoTransaccion: request.codigoUnicoTransaccion,
       numeroTarjeta: request.numeroTarjeta,
-      cvv: request.codigoSeguridad ? String(request.codigoSeguridad) : null,  // Convertir a string
-      fechaCaducidad: request.fechaExpiracion ? convertirFormatoFecha(request.fechaExpiracion) : null,
+      cvv: String(request.codigoSeguridad),  // Convertir a string
+      fechaCaducidad: request.fechaExpiracion, // Mantener el formato MM/YY
       monto: request.monto
     };
-
-    // ❌ Validación: Verificar si falta algún campo
-    if (!marcaRequest.codigoUnicoTransaccion || !marcaRequest.numeroTarjeta || !marcaRequest.cvv || !marcaRequest.fechaCaducidad || !marcaRequest.monto) {
-      console.error("🚨 Error: Datos insuficientes para la validación", marcaRequest);
-      return formatResponse(400, {
-        tarjetaValida: false,
-        mensaje: "⚠️ Datos insuficientes para la validación"
-      });
-    }
 
     console.log("🔍 Enviando solicitud a la MARCA:", {
       codigoUnicoTransaccion: marcaRequest.codigoUnicoTransaccion,
@@ -38,6 +45,12 @@ module.exports.validarMarca = async (event) => {
     // 🔹 Llamar a la API de la Marca
     const marcaResponse = await callMarcaAPI(marcaRequest);
 
+    console.log("✅ Respuesta exitosa de la MARCA:", {
+      tarjetaValida: marcaResponse.esValida,
+      mensaje: marcaResponse.mensaje,
+      swiftBanco: marcaResponse.swiftBanco
+    });
+
     return formatResponse(200, {
       tarjetaValida: marcaResponse.esValida,
       mensaje: marcaResponse.mensaje,
@@ -46,29 +59,22 @@ module.exports.validarMarca = async (event) => {
 
   } catch (error) {
     console.error("❌ Error en validación:", error);
-    return formatResponse(500, {
+    return formatResponse(error.status || 500, {
       tarjetaValida: false,
-      mensaje: "❌ Error en el proceso de validación",
+      mensaje: error.message || "❌ Error en el proceso de validación",
       error: error.message
     });
   }
 };
 
-// 🔹 Transformar fecha "MM/YY" a "YYYY-MM-DD"
-function convertirFormatoFecha(fechaExpiracion) {
-  try {
-    const [mes, anio] = fechaExpiracion.split("/");
-    const anioCompleto = `20${anio}`;
-    return `${anioCompleto}-${mes.padStart(2, "0")}-01`; // YYYY-MM-DD
-  } catch (error) {
-    throw new Error("⚠️ Formato de fecha inválido");
-  }
-}
-
-// 🔹 Llamada real a la API de la Marca
+// 🔹 Llamada a la API de la Marca
 async function callMarcaAPI(marcaRequest) {
   try {
-    console.log("📤 Enviando request a la MARCA:", JSON.stringify(marcaRequest));
+    console.log("📤 Enviando request a la MARCA:", JSON.stringify({
+      ...marcaRequest,
+      numeroTarjeta: `****${marcaRequest.numeroTarjeta.slice(-4)}`,
+      cvv: "***"
+    }));
 
     const response = await fetch(MARCA_API_URL, {
       method: "POST",
@@ -78,23 +84,25 @@ async function callMarcaAPI(marcaRequest) {
       body: JSON.stringify(marcaRequest)
     });
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      const errorText = await response.text();
-      throw new Error(`La API de la MARCA devolvió una respuesta inválida: ${errorText}`);
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error(`❌ Error en respuesta de la MARCA: ${response.status} ${response.statusText}`, errorData);
+      throw {
+        status: response.status,
+        message: `Error en la API de la MARCA: ${response.status} ${response.statusText}`
+      };
     }
 
     const responseData = await response.json();
     console.log("📥 Respuesta de la MARCA:", responseData);
 
-    if (!response.ok) {
-      throw new Error(`Error en la API de la MARCA: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`);
-    }
-
     return responseData;
   } catch (error) {
     console.error("❌ Error detallado en llamada a MARCA:", error);
-    throw new Error(`Error llamando a la API de la MARCA: ${error.message}`);
+    throw {
+      status: 500,
+      message: `Error llamando a la API de la MARCA: ${error.message}`
+    };
   }
 }
 
