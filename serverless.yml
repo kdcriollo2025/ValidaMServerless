@@ -11,7 +11,7 @@ provider:
   timeout: 15 
   environment:
     STAGE: ${self:provider.stage}
-    MARCA_API_URL: ${env:MARCA_API_URL, 'http://localhost:8081/api/v1/procesador/tarjetas/validar'}
+    MARCA_API_URL: ${env:MARCA_API_URL, 'https://0f1f-70-183-141-201.ngrok-free.app/api/v1/procesador/tarjetas/validar'}
 
 functions:
   validarMarca:
