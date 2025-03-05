@@ -2,6 +2,7 @@
 
 const fetch = require("node-fetch");
 
+// Actualizada la URL con la que nos indicas que funciona correctamente
 const MARCA_API_URL = process.env.MARCA_API_URL || "https://190c-70-183-141-201.ngrok-free.app/api/v1/procesador/tarjetas/validar";
 
 module.exports.validarMarca = async (event) => {
@@ -26,12 +27,12 @@ module.exports.validarMarca = async (event) => {
     }
 
     // ⚠️ Transformar los datos al formato que espera la marca
-    // La marca espera: codigoUnicoTransaccion, numeroTarjeta, cvv, fechaCaducidad, monto
+    // IMPORTANTE: La marca espera cvv y fechaCaducidad, no codigoSeguridad y fechaExpiracion
     const marcaRequest = {
       codigoUnicoTransaccion: request.codigoUnicoTransaccion,
       numeroTarjeta: request.numeroTarjeta,
-      cvv: String(request.codigoSeguridad),  // De codigoSeguridad a cvv
-      fechaCaducidad: request.fechaExpiracion, // De fechaExpiracion a fechaCaducidad
+      cvv: String(request.codigoSeguridad),  // Transformación clave: codigoSeguridad → cvv
+      fechaCaducidad: request.fechaExpiracion,  // Transformación clave: fechaExpiracion → fechaCaducidad
       monto: request.monto
     };
 
@@ -47,7 +48,7 @@ module.exports.validarMarca = async (event) => {
     const marcaResponse = await callMarcaAPI(marcaRequest);
 
     return formatResponse(200, {
-      tarjetaValida: marcaResponse.esValida || false,
+      tarjetaValida: marcaResponse.esValida || marcaResponse.tarjetaValida || false,
       mensaje: marcaResponse.mensaje || "Validación completada",
       swiftBanco: marcaResponse.swiftBanco || ""
     });
@@ -65,27 +66,20 @@ module.exports.validarMarca = async (event) => {
 // 🔹 Llamada a la API de la Marca
 async function callMarcaAPI(marcaRequest) {
   try {
-    // Asegurar que los nombres de campos son los correctos para la API externa
-    const requestToMarca = {
-      codigoUnicoTransaccion: marcaRequest.codigoUnicoTransaccion,
-      numeroTarjeta: marcaRequest.numeroTarjeta,
-      cvv: marcaRequest.cvv,
-      fechaCaducidad: marcaRequest.fechaCaducidad,
-      monto: marcaRequest.monto
-    };
-
     console.log("📤 Enviando request a la MARCA:", JSON.stringify({
-      ...requestToMarca,
-      numeroTarjeta: `****${requestToMarca.numeroTarjeta.slice(-4)}`,
+      ...marcaRequest,
+      numeroTarjeta: `****${marcaRequest.numeroTarjeta.slice(-4)}`,
       cvv: "***"
     }));
+
+    console.log("🔗 URL de la MARCA:", MARCA_API_URL);
 
     const response = await fetch(MARCA_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(requestToMarca)
+      body: JSON.stringify(marcaRequest)
     });
 
     const responseText = await response.text();
@@ -105,10 +99,11 @@ async function callMarcaAPI(marcaRequest) {
     if (!response.ok) {
       throw {
         status: response.status,
-        message: `Error en la API de la MARCA: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`
+        message: `Error en la API de la MARCA: ${response.status} ${response.statusText}`
       };
     }
 
+    console.log("✅ Respuesta de la MARCA procesada:", responseData);
     return responseData;
   } catch (error) {
     console.error("❌ Error detallado en llamada a MARCA:", error);
