@@ -26,11 +26,12 @@ module.exports.validarMarca = async (event) => {
     }
 
     // ⚠️ Transformar los datos al formato que espera la marca
+    // La marca espera: codigoUnicoTransaccion, numeroTarjeta, cvv, fechaCaducidad, monto
     const marcaRequest = {
       codigoUnicoTransaccion: request.codigoUnicoTransaccion,
       numeroTarjeta: request.numeroTarjeta,
-      cvv: String(request.codigoSeguridad),  // Convertir a string
-      fechaCaducidad: request.fechaExpiracion, // Mantener el formato MM/YY
+      cvv: String(request.codigoSeguridad),  // De codigoSeguridad a cvv
+      fechaCaducidad: request.fechaExpiracion, // De fechaExpiracion a fechaCaducidad
       monto: request.monto
     };
 
@@ -45,16 +46,10 @@ module.exports.validarMarca = async (event) => {
     // 🔹 Llamar a la API de la Marca
     const marcaResponse = await callMarcaAPI(marcaRequest);
 
-    console.log("✅ Respuesta exitosa de la MARCA:", {
-      tarjetaValida: marcaResponse.esValida,
-      mensaje: marcaResponse.mensaje,
-      swiftBanco: marcaResponse.swiftBanco
-    });
-
     return formatResponse(200, {
-      tarjetaValida: marcaResponse.esValida,
-      mensaje: marcaResponse.mensaje,
-      swiftBanco: marcaResponse.swiftBanco
+      tarjetaValida: marcaResponse.esValida || false,
+      mensaje: marcaResponse.mensaje || "Validación completada",
+      swiftBanco: marcaResponse.swiftBanco || ""
     });
 
   } catch (error) {
@@ -70,9 +65,18 @@ module.exports.validarMarca = async (event) => {
 // 🔹 Llamada a la API de la Marca
 async function callMarcaAPI(marcaRequest) {
   try {
+    // Asegurar que los nombres de campos son los correctos para la API externa
+    const requestToMarca = {
+      codigoUnicoTransaccion: marcaRequest.codigoUnicoTransaccion,
+      numeroTarjeta: marcaRequest.numeroTarjeta,
+      cvv: marcaRequest.cvv,
+      fechaCaducidad: marcaRequest.fechaCaducidad,
+      monto: marcaRequest.monto
+    };
+
     console.log("📤 Enviando request a la MARCA:", JSON.stringify({
-      ...marcaRequest,
-      numeroTarjeta: `****${marcaRequest.numeroTarjeta.slice(-4)}`,
+      ...requestToMarca,
+      numeroTarjeta: `****${requestToMarca.numeroTarjeta.slice(-4)}`,
       cvv: "***"
     }));
 
@@ -81,20 +85,29 @@ async function callMarcaAPI(marcaRequest) {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(marcaRequest)
+      body: JSON.stringify(requestToMarca)
     });
 
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error(`❌ Error en respuesta de la MARCA: ${response.status} ${response.statusText}`, errorData);
-      throw {
-        status: response.status,
-        message: `Error en la API de la MARCA: ${response.status} ${response.statusText}`
+    const responseText = await response.text();
+    console.log(`Respuesta de la MARCA (status ${response.status}):`, responseText);
+
+    let responseData;
+    try {
+      responseData = JSON.parse(responseText);
+    } catch (e) {
+      console.error("Error al parsear respuesta JSON:", e);
+      responseData = { 
+        esValida: false, 
+        mensaje: `Error en formato de respuesta: ${responseText.substring(0, 100)}${responseText.length > 100 ? '...' : ''}` 
       };
     }
 
-    const responseData = await response.json();
-    console.log("📥 Respuesta de la MARCA:", responseData);
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: `Error en la API de la MARCA: ${response.status} ${response.statusText} - ${JSON.stringify(responseData)}`
+      };
+    }
 
     return responseData;
   } catch (error) {
