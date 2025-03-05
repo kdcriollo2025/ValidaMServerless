@@ -3,7 +3,7 @@
 const fetch = require("node-fetch");
 
 // Actualizada la URL con la que nos indicas que funciona correctamente
-const MARCA_API_URL = process.env.MARCA_API_URL || "https://190c-70-183-141-201.ngrok-free.app/api/v1/procesador/tarjetas/validar";
+const MARCA_API_URL = process.env.MARCA_API_URL || "http://marcaTarjeta-alb-1353447202.us-east-2.elb.amazonaws.com/api/v1/procesador/tarjetas/validar";
 
 module.exports.validarMarca = async (event) => {
   try {
