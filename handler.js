@@ -11,12 +11,28 @@ module.exports.validarMarca = async (event) => {
     console.log("📥 Recibiendo solicitud de procesatransaccion:", {
       ...request,
       numeroTarjeta: request.numeroTarjeta ? `****${request.numeroTarjeta.slice(-4)}` : null,
+      cvv: request.cvv ? '***' : null,
       codigoSeguridad: request.codigoSeguridad ? '***' : null
     });
 
-    // ⚠️ Validación de campos requeridos
-    const camposRequeridos = ['codigoUnicoTransaccion', 'numeroTarjeta', 'codigoSeguridad', 'fechaExpiracion', 'monto'];
-    const camposFaltantes = camposRequeridos.filter(campo => !request[campo]);
+    // ⚠️ Validación de campos requeridos - se aceptan ambos formatos
+    const camposRequeridos = [
+      { campo: 'codigoUnicoTransaccion', alternativo: null },
+      { campo: 'numeroTarjeta', alternativo: null },
+      { campo: 'cvv', alternativo: 'codigoSeguridad' },
+      { campo: 'fechaCaducidad', alternativo: 'fechaExpiracion' },
+      { campo: 'monto', alternativo: null }
+    ];
+    
+    const camposFaltantes = [];
+    
+    for (const { campo, alternativo } of camposRequeridos) {
+      // Verificar si el campo principal o su alternativo está presente
+      const estaPresente = request[campo] !== undefined || (alternativo && request[alternativo] !== undefined);
+      if (!estaPresente) {
+        camposFaltantes.push(campo);
+      }
+    }
     
     if (camposFaltantes.length > 0) {
       console.error("🚨 Error: Campos requeridos faltantes:", camposFaltantes);
@@ -31,8 +47,8 @@ module.exports.validarMarca = async (event) => {
     const marcaRequest = {
       codigoUnicoTransaccion: request.codigoUnicoTransaccion,
       numeroTarjeta: request.numeroTarjeta,
-      cvv: String(request.codigoSeguridad),  // Transformación clave: codigoSeguridad → cvv
-      fechaCaducidad: request.fechaExpiracion,  // Transformación clave: fechaExpiracion → fechaCaducidad
+      cvv: String(request.cvv || request.codigoSeguridad),  // Acepta cualquiera de los dos
+      fechaCaducidad: request.fechaCaducidad || request.fechaExpiracion,  // Acepta cualquiera de los dos
       monto: request.monto
     };
 
